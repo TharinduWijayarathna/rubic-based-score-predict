@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viva Evaluation System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Viva Evaluation System</h1>
+            <p class="subtitle">Enter question scores to predict total score and grade</p>
+        </header>
+
+        <main>
+            <form id="vivaForm" class="viva-form">
+                <div class="form-group">
+                    <label for="q1_score">Question 1 Score</label>
+                    <input 
+                        type="number" 
+                        id="q1_score" 
+                        name="q1_score" 
+                        step="0.1" 
+                        min="0" 
+                        required
+                        placeholder="Enter score"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="q2_score">Question 2 Score</label>
+                    <input 
+                        type="number" 
+                        id="q2_score" 
+                        name="q2_score" 
+                        step="0.1" 
+                        min="0" 
+                        required
+                        placeholder="Enter score"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="q3_score">Question 3 Score</label>
+                    <input 
+                        type="number" 
+                        id="q3_score" 
+                        name="q3_score" 
+                        step="0.1" 
+                        min="0" 
+                        required
+                        placeholder="Enter score"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="q4_score">Question 4 Score</label>
+                    <input 
+                        type="number" 
+                        id="q4_score" 
+                        name="q4_score" 
+                        step="0.1" 
+                        min="0" 
+                        required
+                        placeholder="Enter score"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="q5_score">Question 5 Score</label>
+                    <input 
+                        type="number" 
+                        id="q5_score" 
+                        name="q5_score" 
+                        step="0.1" 
+                        min="0" 
+                        required
+                        placeholder="Enter score"
+                    >
+                </div>
+
+                <button type="submit" id="submitBtn" class="submit-btn">
+                    Predict Score
+                </button>
+            </form>
+
+            <!-- Loading indicator -->
+            <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                <div class="spinner"></div>
+                <p>Processing prediction...</p>
+            </div>
+
+            <!-- Results display -->
+            <div id="results" class="results" style="display: none;">
+                <h2>Prediction Results</h2>
+                <div class="result-item">
+                    <span class="result-label">Total Score:</span>
+                    <span id="totalScore" class="result-value"></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Final Grade:</span>
+                    <span id="finalGrade" class="result-value grade"></span>
+                </div>
+            </div>
+
+            <!-- Error display -->
+            <div id="errorMessage" class="error-message" style="display: none;">
+                <p id="errorText"></p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const form = document.getElementById('vivaForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const results = document.getElementById('results');
+        const errorMessage = document.getElementById('errorMessage');
+        const totalScoreElement = document.getElementById('totalScore');
+        const finalGradeElement = document.getElementById('finalGrade');
+        const errorTextElement = document.getElementById('errorText');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Hide previous results and errors
+            results.style.display = 'none';
+            errorMessage.style.display = 'none';
+            
+            // Show loading indicator
+            loadingIndicator.style.display = 'block';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+
+            // Collect form data
+            const formData = {
+                q1_score: parseFloat(document.getElementById('q1_score').value),
+                q2_score: parseFloat(document.getElementById('q2_score').value),
+                q3_score: parseFloat(document.getElementById('q3_score').value),
+                q4_score: parseFloat(document.getElementById('q4_score').value),
+                q5_score: parseFloat(document.getElementById('q5_score').value)
+            };
+
+            try {
+                // Make API call
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                // Hide loading indicator
+                loadingIndicator.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Predict Score';
+
+                if (!response.ok) {
+                    // Handle error response
+                    throw new Error(data.error || 'Prediction failed');
+                }
+
+                // Display results
+                totalScoreElement.textContent = data.total_score.toFixed(2);
+                finalGradeElement.textContent = data.grade;
+                
+                // Apply grade-specific styling
+                finalGradeElement.className = 'result-value grade grade-' + data.grade.toLowerCase();
+                
+                results.style.display = 'block';
+                
+                // Scroll to results
+                results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            } catch (error) {
+                // Hide loading indicator
+                loadingIndicator.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Predict Score';
+
+                // Display error
+                errorTextElement.textContent = error.message || 'An unexpected error occurred';
+                errorMessage.style.display = 'block';
+                
+                // Scroll to error
+                errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+    </script>
+</body>
+</html>
