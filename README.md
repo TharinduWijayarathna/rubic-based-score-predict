@@ -1,6 +1,6 @@
-# Viva Evaluation System
+# Rubric based viva grade predict
 
-A Flask-based web application for predicting total viva scores and grades from individual question scores using machine learning.
+A Flask-based web application for predicting total scores and grades from individual question scores using machine learning.
 
 ## Features
 
